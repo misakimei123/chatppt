@@ -16,7 +16,7 @@ from chatppt.app.domain.services.slide_planner import SlidePlanner
 from chatppt.app.editing.dependency_analyzer import DependencyAnalyzer
 from chatppt.app.editing.edit_parser import EditParser
 from chatppt.app.editing.page_regenerator import PageRegenerator
-from chatppt.app.infra.cache import InMemoryCache
+from chatppt.app.infra.cache import InMemoryCache, RedisCache
 from chatppt.app.infra.llm_provider import LLMProvider, UnconfiguredLLMProvider
 from chatppt.app.infra.telemetry import Telemetry
 from chatppt.app.orchestration.graph import GenerationOrchestrator
@@ -30,6 +30,7 @@ def create_app(
     artifact_root: str | Path = "artifacts",
     template_root: str | Path = "templates/default",
     llm_provider: LLMProvider | None = None,
+    use_redis_cache: bool = True,
 ) -> FastAPI:
     app = FastAPI(title="ChatPPT")
     artifact_root = Path(artifact_root)
@@ -61,7 +62,10 @@ def create_app(
         validator_engine=validator_engine,
     )
     template = template_loader.load(template_root)
-    cache = InMemoryCache()
+    
+    # Initialize cache with Redis support (falls back to in-memory if unavailable)
+    cache = RedisCache() if use_redis_cache else InMemoryCache()
+    
     telemetry = Telemetry()
     generation_store: dict[str, object] = {}
 
@@ -79,6 +83,9 @@ def create_app(
 
     def get_telemetry():
         return telemetry
+    
+    def get_cache():
+        return cache
 
     app.include_router(build_generate_router(get_orchestrator, get_generation_store, get_telemetry), prefix="/api/v1")
     app.include_router(build_edit_router(get_edit_service, get_generation_store, get_template), prefix="/api/v1")
@@ -92,5 +99,26 @@ def create_app(
         telemetry.increment("generation.success")
         cache.set(generation_id, result)
         return {"generation_id": generation_id, "result": result.model_dump(mode="json")}
+    
+    @app.get("/health")
+    def health_check():
+        """Health check endpoint with cache status."""
+        cache_health = cache.health_check() if hasattr(cache, 'health_check') else {"status": "ok", "type": "memory"}
+        return {
+            "status": "healthy",
+            "cache": cache_health,
+            "telemetry": {"enabled": True},
+        }
+    
+    @app.get("/api/v1/cache/status")
+    def cache_status():
+        """Get cache system status."""
+        return cache.health_check() if hasattr(cache, 'health_check') else {"status": "ok", "type": "memory"}
+    
+    @app.delete("/api/v1/cache/clear")
+    def clear_cache():
+        """Clear all cached items."""
+        cache.clear()
+        return {"status": "success", "message": "Cache cleared"}
 
     return app

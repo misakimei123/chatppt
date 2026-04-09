@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import logging
 from typing import Literal
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class EvidenceSource(BaseModel):
@@ -29,3 +32,4 @@ class EvidencePack(BaseModel):
     facts: list[EvidenceFact] = Field(default_factory=list)
     suggestions: list[EvidenceSuggestion] = Field(default_factory=list)
     constraints: list[str] = Field(default_factory=list)
+    search_queries: list[str] = Field(default_factory=list)  # Track actual search queries used
