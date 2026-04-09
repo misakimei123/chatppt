@@ -1,0 +1,17 @@
+Metadata-Version: 2.4
+Name: chatppt
+Version: 0.1.0
+Summary: Workflow-first ChatPPT service with page-level edits.
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi<1.0,>=0.115
+Requires-Dist: httpx<1.0,>=0.28
+Requires-Dist: langchain-core<1.0,>=0.3
+Requires-Dist: langgraph<1.0,>=0.2
+Requires-Dist: lxml<6.0,>=5.3
+Requires-Dist: pydantic<3.0,>=2.10
+Requires-Dist: python-pptx<2.0,>=1.0
+Provides-Extra: dev
+Requires-Dist: pytest<9.0,>=8.3; extra == "dev"
+
+# chatppt

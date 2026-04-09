@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # ChatPPT Backend Service
+  chatppt:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatppt-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY:-}
+      - LLM_MODEL=${LLM_MODEL:-qwen-plus}
+      - LLM_BASE_URL=${LLM_BASE_URL:-https://dashscope.aliyuncs.com/compatible-mode/v1}
+      - SEARCH_API_KEY=${SEARCH_API_KEY:-}
+      - SEARCH_API_URL=${SEARCH_API_URL:-}
+      - REDIS_URL=redis://redis:6379
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - ARTIFACT_ROOT=/app/artifacts
+      - TEMPLATE_ROOT=/app/templates/default
+      - ENABLE_CACHE=true
+      - CACHE_TTL_SECONDS=${CACHE_TTL_SECONDS:-3600}
+    volumes:
+      - ./artifacts:/app/artifacts
+      - ./templates:/app/templates
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis Cache Service
+  redis:
+    image: redis:7-alpine
+    container_name: chatppt-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Streamlit Frontend (Optional)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: chatppt-frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - BACKEND_URL=http://chatppt:8000
+      - STREAMLIT_SERVER_PORT=8501
+    depends_on:
+      - chatppt
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  default:
+    name: chatppt-network
