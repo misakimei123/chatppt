@@ -1,0 +1,37 @@
+{
+  "template_id": "default",
+  "display_name": "Default Blank Template",
+  "layouts": [
+    {
+      "layout_name": "title_slide",
+      "supported_purposes": ["title"],
+      "slot_kinds": [],
+      "structure": "single-col",
+      "placeholder_dimensions": {
+        "title": {"width": 8.0, "height": 1.2},
+        "content": {"width": 8.0, "height": 2.0}
+      }
+    },
+    {
+      "layout_name": "title_content",
+      "supported_purposes": ["problem", "solution", "summary"],
+      "slot_kinds": [],
+      "structure": "single-col",
+      "placeholder_dimensions": {
+        "title": {"width": 8.0, "height": 1.0},
+        "content": {"width": 8.0, "height": 3.0}
+      }
+    },
+    {
+      "layout_name": "data_chart",
+      "supported_purposes": ["data"],
+      "slot_kinds": ["chart"],
+      "structure": "two-col",
+      "placeholder_dimensions": {
+        "title": {"width": 8.0, "height": 1.0},
+        "content": {"width": 3.5, "height": 2.5},
+        "visual": {"width": 4.0, "height": 2.5}
+      }
+    }
+  ]
+}

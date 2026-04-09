@@ -1,0 +1,5 @@
+{
+  "fonts": ["Arial", "Calibri"],
+  "colors": ["#0057B8", "#111111", "#FFFFFF"],
+  "locked_elements": ["footer", "logo"]
+}
